@@ -1,0 +1,303 @@
+FUNCTIONALITY: Satisfactory
+
+DESIGN: Satisfactory
+* Code has memory leaks
+
+Although the project instructions state "a program whose design is satisfactory must adhere to all of the" requirements listed in the project instructions, I am being lenient and giving you Satisfactory, because your fix for the memory leak is very close to correct. Remember to run your code with valgrind to check for memory leaks and confirm that all leaks have been fixed.
+
+gcc -c -o shell.o shell.c -I. -g -Wall --std=gnu11 -fpic
+gcc -o shell shell.o 
+=== FUNCTIONALITY ==============================================================
+
+=== Command runs in a separate process =========================================
+Command(s) run:
+/usr/bin/ps
+
+    PID TTY          TIME CMD
+ 124679 pts/4    00:00:00 bash
+ 124874 pts/4    00:00:00 bash
+ 127053 pts/4    00:00:00 repo.sh
+ 127066 pts/4    00:00:00 assess.sh
+ 127094 pts/4    00:00:00 01d.sh
+ 127099 pts/4    00:00:00 shell
+ 127100 pts/4    00:00:00 tee
+ 127101 pts/4    00:00:00 ps
+
+=== PASS =======================================================================
+
+=== Foreground command without arguments correctly executed ====================
+Command(s) run:
+/usr/bin/date
+
+Sun May  5 12:05:29 EDT 2024
+
+=== PASS =======================================================================
+
+=== Foreground command with arguments correctly executed =======================
+Command(s) run:
+/usr/bin/date --version
+
+date (GNU coreutils) 8.32
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by David MacKenzie.
+
+=== PASS =======================================================================
+
+=== Waits for foreground command to complete ===================================
+Command(s) run:
+/bin/sleep 5
+
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 5
+=== PASS =======================================================================
+
+=== Waits for current foreground command =======================================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 2 &
+Process 127211 started
+shell> /bin/sleep 5
+=== PASS =======================================================================
+
+=== Background command without arguments correctly executed ====================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /usr/bin/ps &
+Process 127233 started
+shell>     PID TTY          TIME CMD
+ 127229 pts/5    00:00:00 shell
+=== PASS =======================================================================
+
+=== Background command with arguments correctly executed =======================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 9 &
+Process 127254 started
+shell> === PASS =======================================================================
+
+=== Accepts commands immediately after background command ======================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 8 &
+Process 127278 started
+shell> /usr/bin/ps
+    PID TTY          TIME CMD
+ 127274 pts/5    00:00:00 shell
+=== PASS =======================================================================
+
+=== No zombies are left from background processes ==============================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /usr/bin/date &
+Process 127302 started
+shell> /usr/bin/sleep 1
+Sun May  5 12:05:33 EDT 2024
+shell> /usr/bin/ps
+Process 127302 finished
+    PID TTY          TIME CMD
+ 127298 pts/5    00:00:00 shell
+ 127304 pts/5    00:00:00 ps
+shell> === PASS =======================================================================
+
+=== Non-existent command results in error message ==============================
+Command(s) run:
+/bin/invalid
+
+command not found: No such file or directory
+
+=== PASS =======================================================================
+
+=== Child process is terminated when execv fails ===============================
+Command(s) run:
+/bin/invalid
+/usr/bin/ps
+
+command not found: No such file or directory
+    PID TTY          TIME CMD
+ 124679 pts/4    00:00:00 bash
+ 124874 pts/4    00:00:00 bash
+ 127053 pts/4    00:00:00 repo.sh
+ 127066 pts/4    00:00:00 assess.sh
+ 127333 pts/4    00:00:00 01g.sh
+ 127338 pts/4    00:00:00 shell
+ 127339 pts/4    00:00:00 tee
+ 127342 pts/4    00:00:00 ps
+
+=== PASS =======================================================================
+
+=== fg causes wait for background process ======================================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 5 &
+Process 127377 started
+shell> fg
+=== PASS =======================================================================
+
+=== fg causes wait for background (not foreground) process =====================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 5 &
+Process 127407 started
+shell> /usr/bin/ps
+    PID TTY          TIME CMD
+ 127403 pts/5    00:00:00 shell
+ 127407 pts/5    00:00:00 sleep
+ 127408 pts/5    00:00:00 ps
+shell> fg
+=== PASS =======================================================================
+
+=== fg waits for most recent background process ================================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 20 &
+Process 127429 started
+shell> /bin/sleep 4 & 
+Process 127430 started
+shell> fg
+shell> === PASS =======================================================================
+
+=== multiple fg wait for background processes in order =========================
+spawn /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+shell> /bin/sleep 12 &
+Process 127451 started
+shell> /bin/sleep 4 & 
+Process 127452 started
+shell> fg
+shell> fg
+=== PASS =======================================================================
+
+=== test.sh ====================================================================
+/usr/bin/ls
+/usr/bin/ls -o
+man execv
+chmod --help
+/usr/bin/ps
+git 
+/usr/bin/ls -l
+
+=== MANUAL =====================================================================
+
+=== test2.sh ===================================================================
+/usr/bin/sleep 2 &
+/usr/bin/ps -l -r & 
+fg
+/usr/bin/sleep 2 
+/usr/bin/echo Please give us a good grade :)
+/usr/bin/ls -a
+git --help
+git status
+
+
+=== MANUAL =====================================================================
+
+=== DESIGN =====================================================================
+
+=== Return values for system calls are checked =================================
+fork(
+--
+        pid_t pid = fork();
+        if (pid == 0) { //if child process, execute
+            if (execvp(command[0], command) < 0) {
+                perror("command not found");
+                exit(EXIT_FAILURE);
+---------------------------
+execv(
+--
+---------------------------
+waitpid(
+--
+    if(waitpid(pid, &status, 0) < 0){
+        printf("Process failed\n");
+    }; //moves most recent background process to foreground
+    *fg_pid = -1; // Reset fg_pid after the process is moved to the foreground
+}
+--
+    while ((finished_pid = waitpid(-1, &status, WNOHANG)) > 0) { //if process has finished, print message and reap
+        printf("Process %d finished\n", finished_pid);
+        for (int i = 0; i < *back_pids_ind; i++) {
+            if (back_pids[i] == finished_pid) { //remove pid from array of background pids
+                for (int j = i + 1; j < *back_pids_ind; j++) {
+--
+                if(waitpid(pid, NULL, 0) < 0){
+                    printf("Process failed\n");
+                };
+            } else {
+                // Background process
+---------------------------
+=== MANUAL =====================================================================
+
+=== Compiles without warnings ==================================================
+=== PASS =======================================================================
+
+=== No memory errors ===========================================================
+==127542== Memcheck, a memory error detector
+==127542== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==127542== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==127542== Command: /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+==127542== 
+    PID TTY          TIME CMD
+ 124679 pts/4    00:00:00 bash
+ 124874 pts/4    00:00:00 bash
+ 127053 pts/4    00:00:00 repo.sh
+ 127066 pts/4    00:00:00 assess.sh
+ 127539 pts/4    00:00:00 03c.sh
+ 127542 pts/4    00:00:02 memcheck-arm64-
+ 127543 pts/4    00:00:00 tee
+ 127544 pts/4    00:00:00 grep
+ 127545 pts/4    00:00:00 03c.sh
+ 127546 pts/4    00:00:00 cat
+ 127547 pts/4    00:00:00 ps
+Process 127548 started
+==127542== 
+==127542== HEAP SUMMARY:
+==127542==     in use at exit: 2 bytes in 1 blocks
+==127542==   total heap usage: 16 allocs, 15 frees, 8,340 bytes allocated
+==127542== 
+==127542== For a detailed leak analysis, rerun with: --leak-check=full
+==127542== 
+==127542== For lists of detected and suppressed errors, rerun with: -s
+==127542== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==127542== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+=== PASS =======================================================================
+
+=== No memory leaks ============================================================
+==127561== Memcheck, a memory error detector
+==127561== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==127561== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==127561== Command: /home/student/current-semester/projects/shell/grading/tests/../repo/shell
+==127561== 
+    PID TTY          TIME CMD
+ 124679 pts/4    00:00:00 bash
+ 124874 pts/4    00:00:00 bash
+ 127053 pts/4    00:00:00 repo.sh
+ 127066 pts/4    00:00:00 assess.sh
+ 127558 pts/4    00:00:00 03d.sh
+ 127561 pts/4    00:00:02 memcheck-arm64-
+ 127562 pts/4    00:00:00 tee
+ 127563 pts/4    00:00:00 grep
+ 127564 pts/4    00:00:00 03d.sh
+ 127565 pts/4    00:00:00 cat
+ 127566 pts/4    00:00:00 ps
+Process 127567 started
+==127561== 
+==127561== HEAP SUMMARY:
+==127561==     in use at exit: 2 bytes in 1 blocks
+==127561==   total heap usage: 16 allocs, 15 frees, 8,340 bytes allocated
+==127561== 
+==127561== 2 bytes in 1 blocks are definitely lost in loss record 1 of 1
+==127561==    at 0x4865058: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-arm64-linux.so)
+==127561==    by 0x492051F: strdup (strdup.c:42)
+==127561==    by 0x108E0F: tokenize (shell.c:79)
+==127561==    by 0x108D1B: main (shell.c:39)
+==127561== 
+==127561== LEAK SUMMARY:
+==127561==    definitely lost: 2 bytes in 1 blocks
+==127561==    indirectly lost: 0 bytes in 0 blocks
+==127561==      possibly lost: 0 bytes in 0 blocks
+==127561==    still reachable: 0 bytes in 0 blocks
+==127561==         suppressed: 0 bytes in 0 blocks
+==127561== 
+==127561== For lists of detected and suppressed errors, rerun with: -s
+==127561== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+=== MISS =======================================================================
+
+=== Uses multiple functions ====================================================
+4 helper functions
+=== PASS =======================================================================
+
