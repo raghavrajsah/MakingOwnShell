@@ -1,7 +1,4 @@
-/*****
- * Project 03: Shell
- * COSC 208, Introduction to Computer Systems, Spring 2024
- ******/
+
 
 #include <stdio.h>
 #include <stdlib.h>
